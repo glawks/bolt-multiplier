@@ -113,13 +113,15 @@ void synchronize_cycle() {
 }
 
 // OpenRAC's HUD text does not inherit the bolt counter's animation.
-// RAC1's counter is HUD slot 2 (key 0x754E); the original game updates its
-// panel and digit fade at +0x70/+0x71. These offsets are common to PAL/NTSC.
+// RAC1's counter is HUD slot 2 (definition 0x754E at +0x20); the original
+// game updates its panel and digit fade at +0x70/+0x71. Field +0x64 is a
+// generated serial/handle, NOT the definition id. These offsets are common
+// to PAL/NTSC, as confirmed by the game's queue_animation_update().
 int bolt_counter_alpha() {
     constexpr uint32_t kSlotBytes = 0x90u;
     const auto slot = s_mod->relocate(s_disc->hud_slots) + 2u * kSlotBytes;
     const auto memory = s_mod->memory();
-    if (memory.read<int32_t>(slot + 0x64u) != 0x754E) return 0;
+    if (memory.read<int32_t>(slot + 0x20u) != 0x754E) return 0;
     const uint8_t panel = memory.read<uint8_t>(slot + 0x70u);
     const uint8_t fade = memory.read<uint8_t>(slot + 0x71u);
     if (panel == 0 || fade == 0) return 0;
@@ -275,9 +277,9 @@ void load(openrac::Mod& mod) {
         if (extra > 0) s_mod->bolts(extra);
     });
     mod.on_frame(frame);
-    mod.info("Bolt Multiplier v0.2.1 (native C++), mode=" + s_mode);
+    mod.info("Bolt Multiplier v0.2.2 (native C++), mode=" + s_mode);
 }
 
 } // namespace
 
-OPENRAC_MOD_CPP("bolt-multiplier", "0.2.1", load)
+OPENRAC_MOD_CPP("bolt-multiplier", "0.2.2", load)
