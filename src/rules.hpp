@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) 2026 glawks
+// Portions of the enemy classification are adapted from OpenRAC's Difficulty mod.
+// Copyright (c) 2026 the OpenRAC contributors
 // Pure, host-independent multiplier rules for Ratchet & Clank 1.
 #pragma once
 

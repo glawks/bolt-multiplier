@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) 2026 glawks
 // Bolt Multiplier for OpenRAC's native Ratchet & Clank 1 port.
 // Challenge Mode only is the default; optional activation from the start.
 // The game and earlier mods keep their original hooks. No renderer patching:
