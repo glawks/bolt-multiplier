@@ -1,8 +1,8 @@
 {
   "format": 2,
   "id": "bolt-multiplier",
-  "name": "Bolt Multiplier",
-  "version": "0.2.4",
+  "name": "Bolt Multiplier (Native HUD Test)",
+  "version": "0.2.5-native-test",
   "author": "glawks",
   "description": "RAC2-style bolt streaks in Ratchet & Clank 1: earn up to x20 by defeating enemies, lose the multiplier when hit. Enable in Challenge Mode only or from the start, with an in-game multiplier HUD.",
   "license": "GPL-3.0-or-later",
@@ -22,7 +22,8 @@
     "rac1.level.load_gameplay",
     "rac1.player.take_damage",
     "rac1.moby.record_death",
-    "rac1.moby.collect_bolt"
+    "rac1.moby.collect_bolt",
+    "rac1.hud.quick_select.draw"
   ],
   "settings": [
     {
@@ -72,6 +73,13 @@
       "type": "bool",
       "default": false,
       "description": "Write Challenge Mode detection and multiplier changes to the game log."
+    },
+    {
+      "key": "native_hud_probe",
+      "name": "Native HUD drawing test",
+      "type": "bool",
+      "default": true,
+      "description": "Diagnostic: while Quick Select draws, show fixed x20 below the bolt icon using native glyphs. Ignores streak/Challenge Mode and bolt fade; replaces the normal multiplier text. Restart after changing."
     }
   ]
 }

@@ -7,6 +7,7 @@
 #include "openrac/mod.hpp"
 #include "openrac/games/rac1.hpp"
 #include "rules.hpp"
+#include "native_hud_probe.hpp"
 
 #include <algorithm>
 
@@ -42,6 +43,7 @@ const Disc* s_disc = nullptr;
 rules::Streak s_streak;
 std::string s_mode = "challenge";
 bool s_show_hud = true;
+bool s_native_hud_probe = false;
 std::string s_hud_placement = "edges";
 bool s_log_changes = false;
 bool s_last_active = false;
@@ -145,7 +147,7 @@ void update_hud(int level) {
         return;
     }
     const bool on = active(current_cycle());
-    const int alpha = on && s_show_hud ? bolt_counter_alpha() : 0;
+    const int alpha = on && s_show_hud && !s_native_hud_probe ? bolt_counter_alpha() : 0;
     const bool visible = alpha != 0;
     const int multiplier = s_streak.multiplier();
     if (s_hud_level == level && s_hud_multiplier == multiplier
@@ -246,6 +248,17 @@ void load(openrac::Mod& mod) {
     s_hud_placement = mod.setting<std::string>("hud_placement");
     if (s_hud_placement != "icon" && s_hud_placement != "edges") s_hud_placement = "edges";
     s_log_changes = mod.setting<bool>("debug_log");
+    s_native_hud_probe = mod.setting<bool>("native_hud_probe");
+    if (s_native_hud_probe) {
+        // This callback runs inside the HUD traversal, while OpenRAC has
+        // temporarily applied the widescreen displacement to every slot.
+        mod.hook<rac1::Hud_QuickSelect_Draw>([](auto original, uint32_t panel) -> int32_t {
+            const int32_t result = original(panel);
+            if (s_show_hud) native_hud_probe::draw(*s_mod, s_disc == &kPal, s_disc->hud_slots);
+            return result;
+        });
+        mod.info("Native HUD PROBE enabled: open Quick Select to see fixed x20 beneath the bolt icon");
+    }
     reset_for_save("mod loaded");
     s_last_level = -2;
 
@@ -308,9 +321,9 @@ void load(openrac::Mod& mod) {
         if (extra > 0) s_mod->bolts(extra);
     });
     mod.on_frame(frame);
-    mod.info("Bolt Multiplier v0.2.4 (native C++), mode=" + s_mode);
+    mod.info("Bolt Multiplier v0.2.5-native-test (native C++), mode=" + s_mode);
 }
 
 } // namespace
 
-OPENRAC_MOD_CPP("bolt-multiplier", "0.2.4", load)
+OPENRAC_MOD_CPP("bolt-multiplier", "0.2.5-native-test", load)
