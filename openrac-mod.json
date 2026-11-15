@@ -2,7 +2,7 @@
   "format": 2,
   "id": "bolt-multiplier",
   "name": "Bolt Multiplier",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "glawks",
   "description": "RAC2-style bolt streaks in Ratchet & Clank 1: earn up to x20 by defeating enemies, lose the multiplier when hit. Enable in Challenge Mode only or from the start, with an in-game multiplier HUD.",
   "license": "GPL-3.0-or-later",

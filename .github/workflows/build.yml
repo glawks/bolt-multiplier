@@ -85,7 +85,7 @@ jobs:
       - name: Combine platform packages
         run: |
           SDK=$(python tools/fetch_sdk.py)
-          python "$SDK/tools/package_mod.py" --merge dist/bolt-multiplier-0.2.0-*.zip -o dist/bolt-multiplier-0.2.0.zip
+          python "$SDK/tools/package_mod.py" --merge dist/bolt-multiplier-0.2.1-*.zip -o dist/bolt-multiplier-0.2.1.zip
           (cd dist && sha256sum *.zip > SHA256SUMS)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

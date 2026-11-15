@@ -1,6 +1,6 @@
 # Bolt Multiplier for Ratchet & Clank 1 (OpenRAC)
 
-**Native C++ development version 0.2.0** — a streak-based bolt multiplier for OpenRAC's Ratchet & Clank 1, with a HUD drawn in the game's own font. **Challenge Mode only** is the default, with **From the start** available in the launcher's mod settings. This is a source checkout, not an installable native binary; compile it using the instructions below (or use a GitHub Actions build artifact).
+**Native C++ development version 0.2.1** — a streak-based bolt multiplier for OpenRAC's Ratchet & Clank 1, with a HUD drawn in the game's own font. **Challenge Mode only** is the default, with **From the start** available in the launcher's mod settings. This is a source checkout, not an installable native binary; compile it using the instructions below (or use a GitHub Actions build artifact).
 
 ## How it plays
 
@@ -8,7 +8,7 @@
 - Collecting a bolt gives its normal value, then the mod adds the extra multiple. This includes loose bolts dropped from broken crates, although **crates do not count as kills**.
 - When Ratchet actually loses health or dies, the streak returns to **x1**. An invincibility mod that prevents all health loss does not break a streak.
 - The streak also resets on a level change or save load. It is not stored in the save file.
-- A small `x1`–`x20` text indicator appears near the upper-right bolt display, drawn with RAC1's HUD font through the **OpenRAC native HUD API (1.12)**. It hides when the game hides its HUD.
+- A small `x1`–`x20` text indicator sits under the bolt total in RAC1's own font (OpenRAC HUD API 1.12). It reads the game's real bolt-counter fade from HUD slot 2 and disappears when that counter fades out. On widescreen **HUD: Edges**, native mod text remains limited to the 4:3 canvas, so the position is approximate until OpenRAC supports anchored mod HUD text.
 - Works with the supported **RAC1 PAL and NTSC-U** builds. No PS2 assets are included.
 
 ## Settings
@@ -46,7 +46,7 @@ cmake --build build-rules
 ctest --test-dir build-rules --output-on-failure
 ```
 
-The included GitHub Actions workflow builds platform packages for Windows x64, Linux x64/arm64, and macOS Intel/Apple Silicon, then merges them. Push tag `v0.2.0` **after the tests and in-game verification** to publish a release.
+The included GitHub Actions workflow builds platform packages for Windows x64, Linux x64/arm64, and macOS Intel/Apple Silicon, then merges them. Push tag `v0.2.1` **after the tests and in-game verification** to publish a release.
 
 ## Multiplier progression
 
@@ -70,7 +70,7 @@ The included GitHub Actions workflow builds platform packages for Windows x64, L
 3. Switch to **From the start** and reload a new game: multiplier works from the first enemy.
 4. Break a crate: collect its bolts at the current multiplier without increasing the streak.
 5. Take damage: verify immediate reset to x1. Test death by falling and by crusher too.
-6. Check the HUD near the bolt counter with **4:3**, **16:9** and both **HUD centre/edges** settings. Its exact placement may need adjustment after screenshots.
+6. Check the HUD under the bolt counter with **4:3**, **16:9** and both **HUD centre/edges** settings: it should disappear when the bolt counter fades out and reappear with the counter after a new pickup. Widescreen edge alignment remains approximate due to SDK limits.
 7. Check an existing Challenge Mode save and a first-playthrough save on **NTSC-U** with **Detailed multiplier log** enabled. **The NTSC-U cycle address is currently inferred**, so this must be verified on real saves before release.
 8. Try with other hooks used by your mods (e.g. Difficulty), plus the Cheats mod with its bolt multiplier set to x1. If you enable multiple bolt multipliers, their effects may stack.
 

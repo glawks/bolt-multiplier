@@ -24,11 +24,12 @@ namespace rules = bolt_multiplier;
 struct Disc {
     uint32_t hero;
     uint32_t challenge_cycle;
+    uint32_t hud_slots;
 };
-constexpr Disc kPal{0x0013F450u, 0x0015EF20u};
+constexpr Disc kPal{0x0013F450u, 0x0015EF20u, 0x00199C60u};
 // NTSC's cycle pointer follows the -0x100 offset seen in related globals.
 // Its exact position must still be checked against an NTSC Challenge Mode save.
-constexpr Disc kNtsc{0x0013F350u, 0x0015EE20u};
+constexpr Disc kNtsc{0x0013F350u, 0x0015EE20u, 0x00199B60u};
 constexpr uint32_t kHealthOffset = 0x22A8u;
 constexpr uint32_t kMobyClassOffset = 0xA6u;
 constexpr uint32_t kSafeMaxCycle = 999u;
@@ -47,6 +48,7 @@ int s_hud_level = -2;
 int s_hud_multiplier = -1;
 bool s_hud_active = false;
 bool s_hud_visible = false;
+int s_hud_alpha = -1;
 int32_t s_last_health = 0;
 bool s_have_health = false;
 std::unordered_set<uint32_t> s_deaths_this_tick;
@@ -73,6 +75,7 @@ void invalidate_hud() {
     s_hud_multiplier = -1;
     s_hud_active = false;
     s_hud_visible = false;
+    s_hud_alpha = -1;
 }
 
 void reset_streak(const char* reason) {
@@ -109,43 +112,59 @@ void synchronize_cycle() {
     }
 }
 
-// The HUD API takes 4:3 relative positions and draws using RAC1's own small
-// font. The ASCII 'x' is deliberate: its font does not contain the × glyph.
-// Positioned just below the top-right bolt display; adjust after a live
-// screenshot for each HUD mode/aspect setting if needed.
+// OpenRAC's HUD text does not inherit the bolt counter's animation.
+// RAC1's counter is HUD slot 2 (key 0x754E); the original game updates its
+// panel and digit fade at +0x70/+0x71. These offsets are common to PAL/NTSC.
+int bolt_counter_alpha() {
+    constexpr uint32_t kSlotBytes = 0x90u;
+    const auto slot = s_mod->relocate(s_disc->hud_slots) + 2u * kSlotBytes;
+    const auto memory = s_mod->memory();
+    if (memory.read<int32_t>(slot + 0x64u) != 0x754E) return 0;
+    const uint8_t panel = memory.read<uint8_t>(slot + 0x70u);
+    const uint8_t fade = memory.read<uint8_t>(slot + 0x71u);
+    if (panel == 0 || fade == 0) return 0;
+    const unsigned alpha = static_cast<unsigned>(fade) * 32u;
+    return static_cast<int>(alpha > 255u ? 255u : alpha);
+}
+
+// The game's font is supported by the SDK 1.12 HUD text API, but the
+// coordinates are limited to the original 4:3 canvas. HUD: Edges shifts
+// the game's bolt panel farther right in widescreen; put our label as
+// close to it as this SDK currently permits.
 void update_hud(int level) {
     if (level < 0) {
         invalidate_hud();
         return;
     }
     const bool on = active(current_cycle());
-    const bool visible = on && s_show_hud;
+    const int alpha = on && s_show_hud ? bolt_counter_alpha() : 0;
+    const bool visible = alpha != 0;
     const int multiplier = s_streak.multiplier();
     if (s_hud_level == level && s_hud_multiplier == multiplier
-        && s_hud_active == on && s_hud_visible == visible) {
+        && s_hud_active == on && s_hud_visible == visible && s_hud_alpha == alpha) {
         return;
     }
     std::vector<openrac_hud_text> lines;
     if (visible) {
         openrac_hud_text text{};
         std::snprintf(text.text, sizeof text.text, "x%d", multiplier);
-        text.x = 0.84f;
-        text.y = 0.145f;
+        text.x = 0.985f;
+        text.y = 0.132f;
         text.scale = 0.80f;
-        // 128 preserves the native colour of RAC1's glyph texture.
         text.rgba[0] = 128;
         text.rgba[1] = 128;
         text.rgba[2] = 128;
-        text.rgba[3] = 255;
+        text.rgba[3] = static_cast<uint8_t>(alpha);
         text.flags = OPENRAC_HUD_SMALL | OPENRAC_HUD_SHADOW;
         lines.push_back(text);
     }
-    // The port refuses a HUD line until gameplay is loaded. Retry next tick.
+    // The port refuses text during level load, so retry next tick.
     if (!s_mod->hud_text_set(lines)) return;
     s_hud_level = level;
     s_hud_multiplier = multiplier;
     s_hud_active = on;
     s_hud_visible = visible;
+    s_hud_alpha = alpha;
 }
 
 void frame() {
@@ -256,9 +275,9 @@ void load(openrac::Mod& mod) {
         if (extra > 0) s_mod->bolts(extra);
     });
     mod.on_frame(frame);
-    mod.info("Bolt Multiplier v0.2.0 (native C++), mode=" + s_mode);
+    mod.info("Bolt Multiplier v0.2.1 (native C++), mode=" + s_mode);
 }
 
 } // namespace
 
-OPENRAC_MOD_CPP("bolt-multiplier", "0.2.0", load)
+OPENRAC_MOD_CPP("bolt-multiplier", "0.2.1", load)
