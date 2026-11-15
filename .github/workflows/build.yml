@@ -85,7 +85,8 @@ jobs:
       - name: Combine platform packages
         run: |
           SDK=$(python tools/fetch_sdk.py)
-          python "$SDK/tools/package_mod.py" --merge dist/bolt-multiplier-0.2.4-*.zip -o dist/bolt-multiplier-0.2.4.zip
+          VERSION=$(python -c 'import json; print(json.load(open("openrac-mod.json", encoding="utf-8"))["version"])')
+          python "$SDK/tools/package_mod.py" --merge dist/bolt-multiplier-"$VERSION"-*.zip -o dist/bolt-multiplier-"$VERSION".zip
           (cd dist && sha256sum *.zip > SHA256SUMS)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
