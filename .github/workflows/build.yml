@@ -1,7 +1,7 @@
 name: build
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, dev]
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -99,9 +99,8 @@ jobs:
   release:
     name: Publish versioned release
     needs: merge
-    # A successful build of a new version on main publishes automatically.
-    # Tag builds can also publish, but a released version is never overwritten.
-    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) }}
+    # Development pushes build artifacts only; only the stable branch publishes.
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
     runs-on: ubuntu-24.04
     concurrency:
       group: bolt-multiplier-releases
@@ -139,20 +138,21 @@ jobs:
           test -s "dist/bolt-multiplier-${VERSION}.zip"
           test -s dist/SHA256SUMS
 
-          # One published build per version, even if more commits are pushed.
+          # Public stable releases are never overwritten by later commits.
+          # Promote v0.2.4 (and any earlier prerelease) without changing assets.
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists; leaving it unchanged."
+            if [[ "$(gh release view "$TAG" --json isPrerelease --jq '.isPrerelease')" == "true" ]]; then
+              echo "Promoting existing $TAG to a full public release."
+              gh release edit "$TAG" --prerelease=false --latest
+            else
+              echo "Release $TAG is already public; leaving it unchanged."
+            fi
             exit 0
           fi
 
-          FLAGS=()
-          # Pre-1.0 builds are automatically marked as pre-releases.
-          if [[ "$VERSION" == 0.* ]]; then
-            FLAGS+=(--prerelease)
-          fi
           gh release create "$TAG" \
             --title "Bolt Multiplier $TAG" \
             --target "$GITHUB_SHA" \
             --generate-notes \
-            "${FLAGS[@]}" \
+            --latest \
             dist/bolt-multiplier-"$VERSION".zip dist/SHA256SUMS

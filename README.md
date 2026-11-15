@@ -67,7 +67,9 @@ The compiled mod is staged under `build/package/bolt_multiplier/`. To package it
 python .sdk/openrac-mod-sdk-1.14.6/tools/package_mod.py build/package/bolt_multiplier -o dist
 ```
 
-GitHub Actions builds and combines all supported platform packages. After a successful build on `main`, it automatically creates a GitHub Release for the version in `openrac-mod.json` **if that version hasn't already been released**. Later commits with the same version do not replace the published ZIP. Versions below 1.0 are published as pre-releases.
+GitHub Actions builds all supported platforms on both `main` and `dev`. Builds on `dev` provide downloadable Actions artifacts **without publishing a GitHub Release**. The `main` branch is for public releases: after a successful build it publishes the version from `openrac-mod.json` as a normal release, if that version is new. Existing release files are never overwritten by subsequent commits.
+
+For new work, use the [`dev` branch](https://github.com/glawks/bolt-multiplier/tree/dev), test changes there, and merge them into `main` when ready to publish. **Increase the version in `openrac-mod.json` and `CMakeLists.txt` before the next public release.**
 
 ## Licence
 
