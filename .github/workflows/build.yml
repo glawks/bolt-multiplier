@@ -138,14 +138,33 @@ jobs:
           test -s "dist/bolt-multiplier-${VERSION}.zip"
           test -s dist/SHA256SUMS
 
-          # Public stable releases are never overwritten by later commits.
-          # Promote v0.2.4 (and any earlier prerelease) without changing assets.
+          # Preserve a completed version: subsequent commits with the same
+          # version must not silently replace reviewed release binaries.
           if gh release view "$TAG" >/dev/null 2>&1; then
             if [[ "$(gh release view "$TAG" --json isPrerelease --jq '.isPrerelease')" == "true" ]]; then
-              echo "Promoting existing $TAG to a full public release."
               gh release edit "$TAG" --prerelease=false --latest
+            fi
+
+            # OpenRAC's external-mod index REQUIRES per-platform ZIP assets.
+            # Existing v0.2.4 was published with only the merged ZIP. Repair an
+            # incomplete release by uploading ALL files from one successful
+            # build (including SHA256SUMS), so their hashes remain consistent.
+            ASSETS="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+            REPAIR=0
+            for FILE in dist/bolt-multiplier-"$VERSION"-*.zip dist/bolt-multiplier-"$VERSION".zip dist/SHA256SUMS; do
+              test -s "$FILE"
+              NAME="${FILE##*/}"
+              if ! grep -Fqx "$NAME" <<< "$ASSETS"; then
+                echo "Missing release asset: $NAME"
+                REPAIR=1
+              fi
+            done
+            if [[ "$REPAIR" == 1 ]]; then
+              gh release upload "$TAG" --clobber \
+                dist/bolt-multiplier-"$VERSION"-*.zip \
+                dist/bolt-multiplier-"$VERSION".zip dist/SHA256SUMS
             else
-              echo "Release $TAG is already public; leaving it unchanged."
+              echo "Release $TAG is complete; leaving its artifacts unchanged."
             fi
             exit 0
           fi
@@ -155,4 +174,5 @@ jobs:
             --target "$GITHUB_SHA" \
             --generate-notes \
             --latest \
+            dist/bolt-multiplier-"$VERSION"-*.zip \
             dist/bolt-multiplier-"$VERSION".zip dist/SHA256SUMS
