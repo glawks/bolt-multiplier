@@ -2,13 +2,18 @@
   "format": 2,
   "id": "bolt-multiplier",
   "name": "Bolt Multiplier",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "glawks",
   "description": "RAC2-style bolt streaks in Ratchet & Clank 1: earn up to x20 by defeating enemies, lose the multiplier when hit. Enable in Challenge Mode only or from the start, with an in-game multiplier HUD.",
   "license": "GPL-3.0-or-later",
   "api": "1.12",
   "multiplayer": "solo",
-  "games": { "rac1": ["pal", "ntsc"] },
+  "games": {
+    "rac1": [
+      "pal",
+      "ntsc"
+    ]
+  },
   "hooks": [
     "rac1.save.new_game",
     "rac1.save.new_game_plus",
@@ -26,8 +31,14 @@
       "type": "choice",
       "default": "challenge",
       "choices": [
-        { "value": "challenge", "name": "Challenge Mode only" },
-        { "value": "always", "name": "From the start" }
+        {
+          "value": "challenge",
+          "name": "Challenge Mode only"
+        },
+        {
+          "value": "always",
+          "name": "From the start"
+        }
       ],
       "description": "Start the combo system in Challenge Mode (default), or in every playthrough. Restart the game after changing."
     },
@@ -37,6 +48,23 @@
       "type": "bool",
       "default": true,
       "description": "Display x1 to x20 near the bolt counter using the game's native HUD font."
+    },
+    {
+      "key": "hud_placement",
+      "name": "Multiplier HUD placement",
+      "type": "choice",
+      "default": "edges",
+      "choices": [
+        {
+          "value": "edges",
+          "name": "Near bolt (HUD: Edges)"
+        },
+        {
+          "value": "icon",
+          "name": "On bolt icon (HUD: Centre / 4:3)"
+        }
+      ],
+      "description": "Edges: as close as possible within OpenRAC's 4:3 text boundary. Icon: draws directly on the bolt icon with HUD centred. Change the in-game HUD layout to Centre for exact alignment. Restart after changing."
     },
     {
       "key": "debug_log",

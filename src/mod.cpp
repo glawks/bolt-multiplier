@@ -8,6 +8,8 @@
 #include "openrac/games/rac1.hpp"
 #include "rules.hpp"
 
+#include <algorithm>
+
 #include <cstdint>
 #include <cstdio>
 #include <string>
@@ -25,11 +27,12 @@ struct Disc {
     uint32_t hero;
     uint32_t challenge_cycle;
     uint32_t hud_slots;
+    uint32_t screen_lines;
 };
-constexpr Disc kPal{0x0013F450u, 0x0015EF20u, 0x00199C60u};
+constexpr Disc kPal{0x0013F450u, 0x0015EF20u, 0x00199C60u, 0x0013E604u};
 // NTSC's cycle pointer follows the -0x100 offset seen in related globals.
 // Its exact position must still be checked against an NTSC Challenge Mode save.
-constexpr Disc kNtsc{0x0013F350u, 0x0015EE20u, 0x00199B60u};
+constexpr Disc kNtsc{0x0013F350u, 0x0015EE20u, 0x00199B60u, 0x0013E504u};
 constexpr uint32_t kHealthOffset = 0x22A8u;
 constexpr uint32_t kMobyClassOffset = 0xA6u;
 constexpr uint32_t kSafeMaxCycle = 999u;
@@ -39,6 +42,7 @@ const Disc* s_disc = nullptr;
 rules::Streak s_streak;
 std::string s_mode = "challenge";
 bool s_show_hud = true;
+std::string s_hud_placement = "edges";
 bool s_log_changes = false;
 bool s_last_active = false;
 bool s_have_cycle = false;
@@ -129,10 +133,12 @@ int bolt_counter_alpha() {
     return static_cast<int>(alpha > 255u ? 255u : alpha);
 }
 
-// The game's font is supported by the SDK 1.12 HUD text API, but the
-// coordinates are limited to the original 4:3 canvas. HUD: Edges shifts
-// the game's bolt panel farther right in widescreen; put our label as
-// close to it as this SDK currently permits.
+// The HUD text API is deliberately restricted to x=0..1 of the game's
+// ORIGINAL 4:3 canvas (mod_play.cpp validates this). In widescreen HUD:
+// Edges the bolt icon is drawn OUTSIDE that area, and we cannot reach it
+// with hud_text_set. Edges mode therefore draws at the closest safe spot.
+// With HUD: Centre / 4:3, reading the bolt HUD record lets us put the
+// indicator directly over the icon without hard-coded screen coordinates.
 void update_hud(int level) {
     if (level < 0) {
         invalidate_hud();
@@ -150,12 +156,33 @@ void update_hud(int level) {
     if (visible) {
         openrac_hud_text text{};
         std::snprintf(text.text, sizeof text.text, "x%d", multiplier);
-        text.x = 0.985f;
-        text.y = 0.132f;
-        text.scale = 0.80f;
-        text.rgba[0] = 128;
-        text.rgba[1] = 128;
-        text.rgba[2] = 128;
+        if (s_hud_placement == "icon") {
+            // draw_bolt_counter_hud_panel uses icon_x = slot.x - 32,
+            // a 32x32 sprite, and y=10 PAL / 18 NTSC.
+            const auto memory = s_mod->memory();
+            const auto slot = s_mod->relocate(s_disc->hud_slots) + 2u * 0x90u;
+            const int32_t slot_x = memory.read<int32_t>(slot + 0x50u);
+            const int32_t lines = memory.read<int32_t>(s_mod->relocate(s_disc->screen_lines));
+            const float icon_x = static_cast<float>(slot_x - 16) / 512.0f;
+            const float icon_y = static_cast<float>((s_disc == &kPal ? 10 : 18) + 16)
+                / static_cast<float>(lines > 0 ? lines : 448);
+            text.x = std::clamp(icon_x, 0.0f, 1.0f);
+            text.y = std::clamp(icon_y, 0.0f, 1.0f);
+            text.scale = 0.68f;
+            // Dark print remains legible on the silver bolt icon.
+            text.rgba[0] = 22;
+            text.rgba[1] = 22;
+            text.rgba[2] = 22;
+        } else {
+            // The right edge of the API's legal rectangle, below the
+            // bolt number to avoid covering the amount (HUD: Edges).
+            text.x = 0.999f;
+            text.y = 0.112f;
+            text.scale = 0.80f;
+            text.rgba[0] = 128;
+            text.rgba[1] = 128;
+            text.rgba[2] = 128;
+        }
         text.rgba[3] = static_cast<uint8_t>(alpha);
         text.flags = OPENRAC_HUD_SMALL | OPENRAC_HUD_SHADOW;
         lines.push_back(text);
@@ -214,6 +241,8 @@ void load(openrac::Mod& mod) {
     s_mode = mod.setting<std::string>("activation_mode");
     if (s_mode != "challenge" && s_mode != "always") s_mode = "challenge";
     s_show_hud = mod.setting<bool>("show_multiplier");
+    s_hud_placement = mod.setting<std::string>("hud_placement");
+    if (s_hud_placement != "icon" && s_hud_placement != "edges") s_hud_placement = "edges";
     s_log_changes = mod.setting<bool>("debug_log");
     reset_for_save("mod loaded");
     s_last_level = -2;
@@ -277,9 +306,9 @@ void load(openrac::Mod& mod) {
         if (extra > 0) s_mod->bolts(extra);
     });
     mod.on_frame(frame);
-    mod.info("Bolt Multiplier v0.2.2 (native C++), mode=" + s_mode);
+    mod.info("Bolt Multiplier v0.2.3 (native C++), mode=" + s_mode);
 }
 
 } // namespace
 
-OPENRAC_MOD_CPP("bolt-multiplier", "0.2.2", load)
+OPENRAC_MOD_CPP("bolt-multiplier", "0.2.3", load)

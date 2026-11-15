@@ -1,6 +1,6 @@
 # Bolt Multiplier for Ratchet & Clank 1 (OpenRAC)
 
-**Native C++ development version 0.2.2** — a streak-based bolt multiplier for OpenRAC's Ratchet & Clank 1, with a HUD drawn in the game's own font. **Challenge Mode only** is the default, with **From the start** available in the launcher's mod settings. This is a source checkout, not an installable native binary; compile it using the instructions below (or use a GitHub Actions build artifact).
+**Native C++ development version 0.2.3** — a streak-based bolt multiplier for OpenRAC's Ratchet & Clank 1, with a HUD drawn in the game's own font. **Challenge Mode only** is the default, with **From the start** available in the launcher's mod settings. This is a source checkout, not an installable native binary; compile it using the instructions below (or use a GitHub Actions build artifact).
 
 ## How it plays
 
@@ -8,8 +8,8 @@
 - Collecting a bolt gives its normal value, then the mod adds the extra multiple. This includes loose bolts dropped from broken crates, although **crates do not count as kills**.
 - When Ratchet actually loses health or dies, the streak returns to **x1**. An invincibility mod that prevents all health loss does not break a streak.
 - The streak also resets on a level change or save load. It is not stored in the save file.
-- A small `x1`–`x20` text indicator sits under the bolt total in RAC1's own font (OpenRAC HUD API 1.12). It reads the game's real bolt-counter fade from HUD slot 2 and disappears when that counter fades out. On widescreen **HUD: Edges**, native mod text remains limited to the 4:3 canvas, so the position is approximate until OpenRAC supports anchored mod HUD text.
-- **v0.2.2 HUD fix:** use the bolt counter's actual queued definition field (`slot + 0x20`, value `0x754E`) rather than the animation serial at `slot + 0x64`. v0.2.1 incorrectly hid the multiplier even while the bolt HUD was visible.
+- A small `x1`–`x20` indicator uses RAC1's native font and mirrors the bolt counter's fade. Under **HUD: Edges** it appears just below/right of the bolt number (the furthest right the mod HUD API allows). Under **HUD: Centre / 4:3**, choose **On bolt icon** in the mod settings to position the number directly over the silver bolt, using the game's own bolt-HUD record.
+- **HUD placement options (v0.2.3):** The native HUD text API rejects positions outside the 4:3 area (0 ≤ x ≤ 1). Since HUD: Edges moves the silver bolt icon outside this region, exact icon overlay is not possible with the current SDK. The **Near bolt** placement is default; **On bolt icon** aligns with the icon when using HUD: Centre / 4:3.
 - Works with the supported **RAC1 PAL and NTSC-U** builds. No PS2 assets are included.
 
 ## Settings
@@ -18,6 +18,7 @@
 | --- | --- | --- |
 | Activation mode | **Challenge Mode only** | Challenge Mode only / From the start |
 | Show multiplier HUD | **On** | On / Off |
+| Multiplier HUD placement | **Near bolt (HUD: Edges)** | Near bolt (HUD: Edges) / On bolt icon (HUD: Centre / 4:3) |
 | Detailed multiplier log | **Off** | On / Off |
 
 The settings are in **OpenRAC Launcher → Mods → Bolt Multiplier**. Restart the game after changing them.
@@ -47,7 +48,7 @@ cmake --build build-rules
 ctest --test-dir build-rules --output-on-failure
 ```
 
-The included GitHub Actions workflow builds platform packages for Windows x64, Linux x64/arm64, and macOS Intel/Apple Silicon, then merges them. Push tag `v0.2.2` **after the tests and in-game verification** to publish a release.
+The included GitHub Actions workflow builds platform packages for Windows x64, Linux x64/arm64, and macOS Intel/Apple Silicon, then merges them. Push tag `v0.2.3` **after the tests and in-game verification** to publish a release.
 
 ## Multiplier progression
 
@@ -71,7 +72,7 @@ The included GitHub Actions workflow builds platform packages for Windows x64, L
 3. Switch to **From the start** and reload a new game: multiplier works from the first enemy.
 4. Break a crate: collect its bolts at the current multiplier without increasing the streak.
 5. Take damage: verify immediate reset to x1. Test death by falling and by crusher too.
-6. Check the HUD under the bolt counter with **4:3**, **16:9** and both **HUD centre/edges** settings: it should disappear when the bolt counter fades out and reappear with the counter after a new pickup. Widescreen edge alignment remains approximate due to SDK limits.
+6. Check the HUD in **16:9 HUD: Edges** (Near bolt placement), where the multiplier sits just below/right of the bolt total; and **HUD: Centre** (On bolt icon placement), where it should overlap the silver bolt icon. With both placements, collect bolts, wait for the counter to fade, and confirm that the multiplier follows it. Exact icon positioning in HUD: Edges requires a future SDK feature.
 7. Check an existing Challenge Mode save and a first-playthrough save on **NTSC-U** with **Detailed multiplier log** enabled. **The NTSC-U cycle address is currently inferred**, so this must be verified on real saves before release.
 8. Try with other hooks used by your mods (e.g. Difficulty), plus the Cheats mod with its bolt multiplier set to x1. If you enable multiple bolt multipliers, their effects may stack.
 
