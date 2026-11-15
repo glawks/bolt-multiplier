@@ -28,6 +28,12 @@ int32_t extra_bolts(int32_t gained, int multiplier, int32_t current_bolts) {
     return static_cast<int32_t>(std::max<int64_t>(0, std::min(raw, room)));
 }
 
+bool Streak::on_event(StreakEvent event) {
+    if (event == StreakEvent::PlanetLoaded) return false;
+    reset();
+    return true;
+}
+
 void Streak::reset() { m_kills = 0; }
 void Streak::kill() { if (m_kills < kMaxKills) ++m_kills; }
 

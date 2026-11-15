@@ -35,8 +35,20 @@ bool is_hostile_class(int16_t moby_class);
 int multiplier_for_kills(int kills);
 int32_t extra_bolts(int32_t gained, int multiplier, int32_t current_bolts);
 
+// A new planet is still the same run. Other events start a fresh streak.
+// Keep the rule here so the event lifecycle can be tested without the game.
+enum class StreakEvent {
+    PlanetLoaded,
+    NewGameOrSaveLoaded,
+    PlaythroughChanged,
+    Damage,
+    Death,
+};
+
 class Streak {
 public:
+    // Returns true when this event resets the streak.
+    bool on_event(StreakEvent event);
     void reset();
     void kill();
     int kills() const { return m_kills; }

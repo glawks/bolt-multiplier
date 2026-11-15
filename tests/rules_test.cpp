@@ -26,6 +26,33 @@ int main() {
     CHECK(streak.kills() == 100);
     streak.reset();
     CHECK(streak.kills() == 0 && streak.multiplier() == 1);
+
+    // The same combo survives ordinary planet travel and repeated arrivals.
+    for (int i = 0; i < 12; ++i) streak.kill();
+    CHECK(streak.kills() == 12 && streak.multiplier() == 7);
+    CHECK(!streak.on_event(StreakEvent::PlanetLoaded));
+    CHECK(streak.kills() == 12 && streak.multiplier() == 7);
+    CHECK(!streak.on_event(StreakEvent::PlanetLoaded));
+    CHECK(streak.kills() == 12 && streak.multiplier() == 7);
+    streak.kill();
+    CHECK(streak.kills() == 13 && streak.multiplier() == 7);
+    CHECK(extra_bolts(5, streak.multiplier(), 100) == 30);
+
+    // Genuine run changes and any damage still reset to x1.
+    for (StreakEvent event : {
+             StreakEvent::NewGameOrSaveLoaded,
+             StreakEvent::PlaythroughChanged,
+             StreakEvent::Damage,
+             StreakEvent::Death,
+         }) {
+        CHECK(streak.on_event(event));
+        CHECK(streak.kills() == 0 && streak.multiplier() == 1);
+        streak.kill();
+        CHECK(streak.multiplier() == 2);
+    }
+    // A new planet immediately after damage must not revive the old streak.
+    CHECK(!streak.on_event(StreakEvent::PlanetLoaded));
+    CHECK(streak.kills() == 1 && streak.multiplier() == 2);
     CHECK(is_hostile_class(28));
     CHECK(is_hostile_class(1051));
     CHECK(is_hostile_class(1126));

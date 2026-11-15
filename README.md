@@ -8,7 +8,7 @@ Build a streak by defeating enemies, earn more bolts, and try to reach **x20** w
 
 - **x1–x20 multiplier:** Defeat enemies without taking damage to increase your multiplier. Reaching x20 requires a streak of 100 kills.
 - **More bolts:** Collected bolts are multiplied, including bolts dropped by crates. Breaking crates does **not** increase your kill streak.
-- **Damage resets the streak:** Losing health or dying resets the multiplier to x1. Streaks also reset when loading a save or changing planets.
+- **Streaks survive planet travel:** Keep your current kill streak when flying to another planet or revisiting one. Taking damage, dying, loading a save, starting a new game or starting another Challenge Mode cycle still resets it. The streak is held in memory, not written into the save file.
 - **In-game HUD:** Displays the current multiplier in RAC1's font and fades alongside the normal bolt counter.
 - **Two activation modes:** Challenge Mode only (default), or From the start.
 
@@ -44,7 +44,7 @@ The two placement modes are manual; changing OpenRAC's HUD layout does not autom
 - **Platform builds:** Windows x64, Linux x64/arm64, macOS Intel/Apple Silicon
 - **OpenRAC mod API:** 1.12 or newer
 
-The gameplay and HUD have been tested in-game on **NTSC-U**. PAL support is included but has not yet been verified in-game.
+The v0.2.4 gameplay and HUD have been tested in-game on **NTSC-U**. This development version's planet-to-planet streak preservation still needs in-game testing. PAL support is included but has not yet been verified in-game.
 
 The mod is currently marked **single-player only**; its bolt economy has not been verified in multiplayer. Mods that change the same game functions may interact depending on load order.
 
@@ -70,6 +70,10 @@ python .sdk/openrac-mod-sdk-1.14.6/tools/package_mod.py build/package/bolt_multi
 GitHub Actions builds all supported platforms on both `main` and `dev`. Builds on `dev` provide downloadable Actions artifacts **without publishing a GitHub Release**. The `main` branch is for public releases: after a successful build it publishes the version from `openrac-mod.json` as a normal release, if that version is new. Existing release files are never overwritten by subsequent commits.
 
 For new work, use the [`dev` branch](https://github.com/glawks/bolt-multiplier/tree/dev), test changes there, and merge them into `main` when ready to publish. **Increase the version in `openrac-mod.json` and `CMakeLists.txt` before the next public release.**
+
+### Planet-travel regression check (development build)
+
+Build up a multiplier above x1, travel to a different planet in Ratchet's ship, and collect a bolt. The multiplier and accumulated kills should continue from where you left them. Repeat by revisiting a planet. Then take damage (expect x1), load a save (expect x1), and start a new game/Challenge Mode cycle (expect x1). Also confirm the multiplier HUD continues to fade with the bolt counter after landing.
 
 ## Licence
 

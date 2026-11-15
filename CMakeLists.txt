@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(bolt_multiplier VERSION 0.2.4 LANGUAGES CXX)
+project(bolt_multiplier VERSION 0.3.0 LANGUAGES CXX)
 
 include(CTest)
 option(BOLT_RULES_ONLY "Build standalone core tests without the OpenRAC SDK" OFF)

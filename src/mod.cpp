@@ -82,16 +82,18 @@ void invalidate_hud() {
     s_hud_alpha = -1;
 }
 
-void reset_streak(const char* reason) {
-    if (s_streak.kills() != 0) {
+void handle_streak_event(rules::StreakEvent event, const char* reason) {
+    const int previous_kills = s_streak.kills();
+    if (!s_streak.on_event(event)) return; // Planet travel keeps the combo.
+
+    if (previous_kills != 0) {
         log_change(std::string("x1 (streak reset: ") + reason + ")");
     }
-    s_streak.reset();
     s_hud_multiplier = -1;
 }
 
 void reset_for_save(const char* reason) {
-    reset_streak(reason);
+    handle_streak_event(rules::StreakEvent::NewGameOrSaveLoaded, reason);
     s_have_cycle = false;
     s_have_health = false;
     s_deaths_this_tick.clear();
@@ -108,7 +110,7 @@ void synchronize_cycle() {
         log_change("activation=" + s_mode + ", NG+ cycle=" + std::to_string(cycle)
                    + (now_active ? ", active" : ", inactive"));
     } else if (s_last_cycle != cycle || s_last_active != now_active) {
-        reset_streak("playthrough changed");
+        handle_streak_event(rules::StreakEvent::PlaythroughChanged, "playthrough changed");
         log_change("NG+ cycle=" + std::to_string(cycle)
                    + (now_active ? ", active" : ", inactive"));
         s_last_cycle = cycle;
@@ -211,7 +213,9 @@ void frame() {
         return;
     }
     if (s_last_level != level) {
-        reset_streak("level changed");
+        // Planet travel is not the end of a kill streak. Only level-local
+        // state (the hero HP baseline and HUD cache) needs refreshing.
+        handle_streak_event(rules::StreakEvent::PlanetLoaded, "level changed");
         s_last_level = level;
         s_have_health = false;
         invalidate_hud();
@@ -221,10 +225,10 @@ void frame() {
     // Ordinary hits are handled by the hook. This also covers falls,
     // crushers, and scripted health loss that bypass Hero_TakeDamage.
     if (active(current_cycle()) && s_have_health && hp < s_last_health) {
-        reset_streak("health decreased");
+        handle_streak_event(rules::StreakEvent::Damage, "health decreased");
     }
     if (active(current_cycle()) && hp <= 0 && s_streak.kills() > 0) {
-        reset_streak("Ratchet died");
+        handle_streak_event(rules::StreakEvent::Death, "Ratchet died");
     }
     s_have_health = true;
     s_last_health = hp;
@@ -272,7 +276,9 @@ void load(openrac::Mod& mod) {
     });
     mod.hook<rac1::Level_LoadGameplay>([](auto original, int32_t full) -> uint32_t {
         const uint32_t result = original(full);
-        reset_streak("level loaded");
+        // Do not reset the streak when flying to a new planet (or revisiting
+        // one). New-game and save-restore hooks handle genuine run changes.
+        handle_streak_event(rules::StreakEvent::PlanetLoaded, "level loaded");
         s_have_health = false;
         s_deaths_this_tick.clear();
         invalidate_hud();
@@ -281,7 +287,8 @@ void load(openrac::Mod& mod) {
     mod.hook<rac1::Hero_TakeDamage>([](auto original, int32_t amount) {
         const int32_t before = health();
         original(amount);
-        if (amount > 0 && health() < before) reset_streak("Ratchet took damage");
+        if (amount > 0 && health() < before)
+            handle_streak_event(rules::StreakEvent::Damage, "Ratchet took damage");
     });
     mod.hook<rac1::Moby_RecordDeath>([](auto original, uint32_t moby,
                                         int32_t flags, int32_t index) {
@@ -308,9 +315,9 @@ void load(openrac::Mod& mod) {
         if (extra > 0) s_mod->bolts(extra);
     });
     mod.on_frame(frame);
-    mod.info("Bolt Multiplier v0.2.4 (native C++), mode=" + s_mode);
+    mod.info("Bolt Multiplier v0.3.0 (native C++), mode=" + s_mode);
 }
 
 } // namespace
 
-OPENRAC_MOD_CPP("bolt-multiplier", "0.2.4", load)
+OPENRAC_MOD_CPP("bolt-multiplier", "0.3.0", load)
