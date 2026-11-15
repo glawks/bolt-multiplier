@@ -1,0 +1,49 @@
+{
+  "format": 2,
+  "id": "bolt-multiplier",
+  "name": "Bolt Multiplier",
+  "version": "0.2.0",
+  "author": "glawks",
+  "description": "RAC2-style bolt streaks in Ratchet & Clank 1: earn up to x20 by defeating enemies, lose the multiplier when hit. Enable in Challenge Mode only or from the start, with an in-game multiplier HUD.",
+  "license": "GPL-3.0-or-later",
+  "api": "1.12",
+  "multiplayer": "solo",
+  "games": { "rac1": ["pal", "ntsc"] },
+  "hooks": [
+    "rac1.save.new_game",
+    "rac1.save.new_game_plus",
+    "rac1.save.restore",
+    "rac1.save.restore_data",
+    "rac1.level.load_gameplay",
+    "rac1.player.take_damage",
+    "rac1.moby.record_death",
+    "rac1.moby.collect_bolt"
+  ],
+  "settings": [
+    {
+      "key": "activation_mode",
+      "name": "Activation mode",
+      "type": "choice",
+      "default": "challenge",
+      "choices": [
+        { "value": "challenge", "name": "Challenge Mode only" },
+        { "value": "always", "name": "From the start" }
+      ],
+      "description": "Start the combo system in Challenge Mode (default), or in every playthrough. Restart the game after changing."
+    },
+    {
+      "key": "show_multiplier",
+      "name": "Show multiplier HUD",
+      "type": "bool",
+      "default": true,
+      "description": "Display x1 to x20 near the bolt counter using the game's native HUD font."
+    },
+    {
+      "key": "debug_log",
+      "name": "Detailed multiplier log",
+      "type": "bool",
+      "default": false,
+      "description": "Write Challenge Mode detection and multiplier changes to the game log."
+    }
+  ]
+}

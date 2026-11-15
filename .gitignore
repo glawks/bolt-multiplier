@@ -1,0 +1,6 @@
+.sdk/
+build/
+cmake-build-*/
+dist/
+*.zip
+.DS_Store
