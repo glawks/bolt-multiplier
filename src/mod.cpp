@@ -178,12 +178,8 @@ void update_hud(int level) {
             // Positioning its centre at 0.999 clipped the final glyph in
             // HUD: Centre despite passing the API's x=0..1 validation.
             // Reserve enough room at the right of the original 4:3 canvas.
-            // In HUD: Edges, the bolt total occupies the upper-right area
-            // where y=0.112 used to overlap its digits. Put the label BELOW
-            // the total. This is deliberately independent of the centre-only
-            // "On bolt icon" position above, which is already correct.
             text.x = 0.960f;
-            text.y = 0.157f;
+            text.y = 0.112f;
             text.scale = 0.80f;
             text.rgba[0] = 128;
             text.rgba[1] = 128;
@@ -312,9 +308,9 @@ void load(openrac::Mod& mod) {
         if (extra > 0) s_mod->bolts(extra);
     });
     mod.on_frame(frame);
-    mod.info("Bolt Multiplier v0.2.5 (native C++), mode=" + s_mode);
+    mod.info("Bolt Multiplier v0.2.4 (native C++), mode=" + s_mode);
 }
 
 } // namespace
 
-OPENRAC_MOD_CPP("bolt-multiplier", "0.2.5", load)
+OPENRAC_MOD_CPP("bolt-multiplier", "0.2.4", load)

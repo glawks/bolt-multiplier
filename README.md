@@ -1,6 +1,6 @@
 # Bolt Multiplier for Ratchet & Clank 1 (OpenRAC)
 
-**Native C++ development version 0.2.5** — a streak-based bolt multiplier for OpenRAC's Ratchet & Clank 1, with a HUD drawn in the game's own font. **Challenge Mode only** is the default, with **From the start** available in the launcher's mod settings. This is a source checkout, not an installable native binary; compile it using the instructions below (or use a GitHub Actions build artifact).
+**Native C++ development version 0.2.4** — a streak-based bolt multiplier for OpenRAC's Ratchet & Clank 1, with a HUD drawn in the game's own font. **Challenge Mode only** is the default, with **From the start** available in the launcher's mod settings. This is a source checkout, not an installable native binary; compile it using the instructions below (or use a GitHub Actions build artifact).
 
 ## How it plays
 
@@ -9,7 +9,7 @@
 - When Ratchet actually loses health or dies, the streak returns to **x1**. An invincibility mod that prevents all health loss does not break a streak.
 - The streak also resets on a level change or save load. It is not stored in the save file.
 - A small `x1`–`x20` indicator uses RAC1's native font and mirrors the bolt counter's fade. Under **HUD: Edges** it appears just below/right of the bolt number (the furthest right the mod HUD API allows). Under **HUD: Centre / 4:3**, choose **On bolt icon** in the mod settings to position the number directly over the silver bolt, using the game's own bolt-HUD record.
-- **HUD placement options (v0.2.5):** **Near bolt (HUD: Edges)** is placed below the counter total (not over the number) and leaves room for the entire `x20` label. **On bolt icon (HUD: Centre / 4:3)** is unchanged. **These options don't switch automatically:** OpenRAC 1.12's native HUD text API does not expose whether the player has selected HUD Centre or Edges. If you change the game's HUD layout, match the corresponding mod placement setting and restart. Exact icon anchoring under HUD: Edges requires upstream HUD text anchoring support.
+- **HUD placement options (v0.2.4):** HUD text centres are restricted to x=0..1 in the original 4:3 HUD canvas, but a glyph can still be cut off at the canvas edge. **Near bolt** now leaves room for the widest `x20` text and its shadow; previously `x1` was clipped when used with HUD: Centre. **On bolt icon** remains designed for HUD: Centre / 4:3. With HUD: Edges the icon can move outside the mod text canvas, so it cannot be directly overlaid using the SDK's current text API.
 - Works with the supported **RAC1 PAL and NTSC-U** builds. No PS2 assets are included.
 
 ## Settings
@@ -48,7 +48,7 @@ cmake --build build-rules
 ctest --test-dir build-rules --output-on-failure
 ```
 
-The included GitHub Actions workflow builds platform packages for Windows x64, Linux x64/arm64, and macOS Intel/Apple Silicon, then merges them. Push tag `v0.2.5` **after the tests and in-game verification** to publish a release.
+The included GitHub Actions workflow builds platform packages for Windows x64, Linux x64/arm64, and macOS Intel/Apple Silicon, then merges them. Push tag `v0.2.4` **after the tests and in-game verification** to publish a release.
 
 ## Multiplier progression
 
@@ -72,7 +72,7 @@ The included GitHub Actions workflow builds platform packages for Windows x64, L
 3. Switch to **From the start** and reload a new game: multiplier works from the first enemy.
 4. Break a crate: collect its bolts at the current multiplier without increasing the streak.
 5. Take damage: verify immediate reset to x1. Test death by falling and by crusher too.
-6. With game **HUD: Edges**, select mod **Near bolt**: the entire `x1`–`x20` label must sit **below** the bolt number, not overlap it, and must fade with the counter. With game **HUD: Centre**, select **On bolt icon**: the text should stay on the icon. Change the mod setting (and restart the game) when switching game HUD modes; the mod SDK does not currently report this preference.
+6. Test **Near bolt** with both **HUD: Edges** and **HUD: Centre**. Verify full labels `x1` and `x20` are visible without right-edge clipping, and both fade with the bolt counter. With **HUD: Centre**, try **On bolt icon** to check icon overlay. The exact icon overlay in HUD: Edges still needs additional SDK support.
 7. Check an existing Challenge Mode save and a first-playthrough save on **NTSC-U** with **Detailed multiplier log** enabled. **The NTSC-U cycle address is currently inferred**, so this must be verified on real saves before release.
 8. Try with other hooks used by your mods (e.g. Difficulty), plus the Cheats mod with its bolt multiplier set to x1. If you enable multiple bolt multipliers, their effects may stack.
 
