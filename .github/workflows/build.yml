@@ -96,24 +96,62 @@ jobs:
           if-no-files-found: error
 
   release:
+    name: Publish versioned release
     needs: merge
-    if: startsWith(github.ref, 'refs/tags/')
+    # A successful build of a new version on main publishes automatically.
+    # Tag builds can also publish, but a released version is never overwritten.
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: ubuntu-24.04
+    concurrency:
+      group: bolt-multiplier-releases
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: mod-release
           path: dist
-      - name: Publish GitHub release
+      - name: Read version from mod manifest
+        id: version
+        run: |
+          VERSION=$(python -c 'import json; print(json.load(open("openrac-mod.json", encoding="utf-8"))["version"])')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Publish release if this version is new
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" --clobber dist/*
-          else
-            gh release create "$TAG" --title "$TAG" --notes 'OpenRAC native Bolt Multiplier' --verify-tag dist/*
+          set -euo pipefail
+          # A manually pushed tag must match the mod's actual version.
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "$TAG" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match manifest version $TAG"
+            exit 1
           fi
+
+          test -s "dist/bolt-multiplier-${VERSION}.zip"
+          test -s dist/SHA256SUMS
+
+          # One published build per version, even if more commits are pushed.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving it unchanged."
+            exit 0
+          fi
+
+          FLAGS=()
+          # Pre-1.0 builds are automatically marked as pre-releases.
+          if [[ "$VERSION" == 0.* ]]; then
+            FLAGS+=(--prerelease)
+          fi
+          gh release create "$TAG" \
+            --title "Bolt Multiplier $TAG" \
+            --target "$GITHUB_SHA" \
+            --generate-notes \
+            "${FLAGS[@]}" \
+            dist/bolt-multiplier-"$VERSION".zip dist/SHA256SUMS

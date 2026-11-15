@@ -14,10 +14,11 @@ Build a streak by defeating enemies, earn more bolts, and try to reach **x20** w
 
 ## Installation
 
-1. Download the **mod-release** artifact from the [latest successful GitHub Actions build](https://github.com/glawks/bolt-multiplier/actions).
-2. Extract the artifact and locate `bolt-multiplier-0.2.4.zip`.
-3. Install the mod ZIP using the **Mods** tab in the OpenRAC Launcher.
-4. Enable **Bolt Multiplier**, configure its settings, and launch Ratchet & Clank.
+1. Download `bolt-multiplier-<version>.zip` from the [GitHub Releases page](https://github.com/glawks/bolt-multiplier/releases).
+2. Install the ZIP using the **Mods** tab in the OpenRAC Launcher.
+3. Enable **Bolt Multiplier**, configure its settings, and launch Ratchet & Clank.
+
+For unreleased development builds, the latest successful [GitHub Actions run](https://github.com/glawks/bolt-multiplier/actions) provides a **mod-release** artifact containing the mod ZIP.
 
 ## Settings
 
@@ -66,7 +67,7 @@ The compiled mod is staged under `build/package/bolt_multiplier/`. To package it
 python .sdk/openrac-mod-sdk-1.14.6/tools/package_mod.py build/package/bolt_multiplier -o dist
 ```
 
-GitHub Actions also builds and combines all supported platform packages.
+GitHub Actions builds and combines all supported platform packages. After a successful build on `main`, it automatically creates a GitHub Release for the version in `openrac-mod.json` **if that version hasn't already been released**. Later commits with the same version do not replace the published ZIP. Versions below 1.0 are published as pre-releases.
 
 ## Licence
 
