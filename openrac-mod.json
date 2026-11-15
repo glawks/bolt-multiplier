@@ -2,7 +2,7 @@
   "format": 2,
   "id": "bolt-multiplier",
   "name": "Bolt Multiplier",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "author": "glawks",
   "description": "RAC2-style bolt streaks in Ratchet & Clank 1: earn up to x20 by defeating enemies, lose the multiplier when hit. Enable in Challenge Mode only or from the start, with an in-game multiplier HUD.",
   "license": "GPL-3.0-or-later",
@@ -64,7 +64,7 @@
           "name": "On bolt icon (HUD: Centre / 4:3)"
         }
       ],
-      "description": "Near bolt: near the counter, safely inside the 4:3 text boundary to prevent clipping on any HUD layout. On bolt icon: designed for HUD Centre / 4:3. Restart after changing."
+      "description": "Near bolt: position beneath the bolt count in HUD Edges without clipping it. On bolt icon: for HUD Centre / 4:3 only; using it with HUD Edges can overlap the bolt number. When switching game HUD layouts, change this setting to match and restart."
     },
     {
       "key": "debug_log",
