@@ -174,9 +174,11 @@ void update_hud(int level) {
             text.rgba[1] = 22;
             text.rgba[2] = 22;
         } else {
-            // The right edge of the API's legal rectangle, below the
-            // bolt number to avoid covering the amount (HUD: Edges).
-            text.x = 0.999f;
+            // The entire text (up to "x20") plus its shadow must fit.
+            // Positioning its centre at 0.999 clipped the final glyph in
+            // HUD: Centre despite passing the API's x=0..1 validation.
+            // Reserve enough room at the right of the original 4:3 canvas.
+            text.x = 0.960f;
             text.y = 0.112f;
             text.scale = 0.80f;
             text.rgba[0] = 128;
@@ -306,9 +308,9 @@ void load(openrac::Mod& mod) {
         if (extra > 0) s_mod->bolts(extra);
     });
     mod.on_frame(frame);
-    mod.info("Bolt Multiplier v0.2.3 (native C++), mode=" + s_mode);
+    mod.info("Bolt Multiplier v0.2.4 (native C++), mode=" + s_mode);
 }
 
 } // namespace
 
-OPENRAC_MOD_CPP("bolt-multiplier", "0.2.3", load)
+OPENRAC_MOD_CPP("bolt-multiplier", "0.2.4", load)
