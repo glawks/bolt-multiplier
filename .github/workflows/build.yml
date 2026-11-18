@@ -154,10 +154,9 @@ jobs:
               gh release edit "$TAG" --prerelease=false --latest
             fi
 
-            # OpenRAC's external-mod index REQUIRES per-platform ZIP assets.
-            # Existing v0.2.4 was published with only the merged ZIP. Repair an
-            # incomplete release by uploading ALL files from one successful
-            # build (including SHA256SUMS), so their hashes remain consistent.
+            # OpenRAC's external-mod index requires per-platform ZIP assets.
+            # Repair an incomplete release with one successful build's complete
+            # set of archives and checksums; do not alter complete releases.
             ASSETS="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
             REPAIR=0
             for FILE in dist/bolt-multiplier-"$VERSION"-*.zip dist/bolt-multiplier-"$VERSION".zip dist/SHA256SUMS; do

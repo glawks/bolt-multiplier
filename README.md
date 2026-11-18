@@ -41,12 +41,14 @@ The two placement modes are manual; changing OpenRAC's HUD layout does not autom
 ## Compatibility
 
 - **Game:** Ratchet & Clank 1 (PAL and NTSC-U)
-- **Platform builds:** Windows x64, Linux x64/arm64, macOS Intel/Apple Silicon; Android arm64 in the experimental `android-dev` build
+- **Platform builds:** Windows x64, Linux x64/arm64, macOS Intel/Apple Silicon, Android arm64
 - **OpenRAC mod API:** 1.12 or newer
 
-Windows NTSC-U gameplay, HUD, and planet-to-planet streak preservation have been tested in-game. **Android arm64 support is experimental**: its NDK library is compiled in CI, but device-side loading and gameplay still require testing. PAL support has not yet been verified in-game.
+Gameplay, the multiplier HUD, and planet-to-planet streak preservation have been tested in-game on Windows NTSC-U, and the Android arm64 build has also been tested successfully in-game. PAL support is included but has not yet been verified in-game.
 
 The mod is currently marked **single-player only**; its bolt economy has not been verified in multiplayer. Mods that change the same game functions may interact depending on load order.
+On Android, install the mod through OpenRAC's Mods interface. The combined release ZIP contains the Android arm64 library alongside the desktop platform libraries.
+
 
 ## Building from source
 
@@ -70,24 +72,6 @@ python .sdk/openrac-mod-sdk-1.14.6/tools/package_mod.py build/package/bolt_multi
 GitHub Actions builds all supported platforms on both `main` and `dev`. Builds on `dev` provide downloadable Actions artifacts **without publishing a GitHub Release**. The `main` branch is for public releases: after a successful build it publishes the version from `openrac-mod.json` as a normal release, if that version is new. Existing release files are never overwritten by subsequent commits.
 
 For new work, use the [`dev` branch](https://github.com/glawks/bolt-multiplier/tree/dev), test changes there, and merge them into `main` when ready to publish. **Increase the version in `openrac-mod.json` and `CMakeLists.txt` before the next public release.**
-
-### Planet-travel regression check (development build)
-
-Build up a multiplier above x1, travel to a different planet in Ratchet's ship, and collect a bolt. The multiplier and accumulated kills should continue from where you left them. Repeat by revisiting a planet. Then take damage (expect x1), load a save (expect x1), and start a new game/Challenge Mode cycle (expect x1). Also confirm the multiplier HUD continues to fade with the bolt counter after landing.
-
-
-
-### Android test build (experimental)
-
-The `android-dev` branch adds an **Android arm64 native library** to the same C++ mod. The prior public release had no `android-arm64` library and could not be loaded on an Android device.
-
-1. Open the [Android development build workflow](https://github.com/glawks/bolt-multiplier/actions/workflows/build.yml?query=branch%3Aandroid-dev), select a successful run and download its **mod-release** artifact.
-2. Extract the Actions artifact; install `bolt-multiplier-0.3.1-android.1.zip` using OpenRAC's Android Mods interface. The combined ZIP contains Android and desktop builds. Alternatively, test the separate `bolt-multiplier-0.3.1-android.1-android-arm64.zip`.
-3. Confirm the launcher recognises the mod as compatible, turn it on and start RAC1. Set **Activation mode → From the start** if you are not in Challenge Mode.
-4. Defeat enemies and pick up bolts (including crate bolts), verify the multiplier HUD and reset-on-damage, then fly to another planet and check that the multiplier persists.
-5. If OpenRAC reports the mod cannot load, capture the exact incompatibility or plugin status message and Android OpenRAC version.
-
-This build is **not a GitHub Release** and will not affect the public v0.3.0 release on `main`. Cross-compilation does not establish runtime compatibility on Android. Merge only after a real-device test.
 
 ## Licence
 

@@ -315,9 +315,9 @@ void load(openrac::Mod& mod) {
         if (extra > 0) s_mod->bolts(extra);
     });
     mod.on_frame(frame);
-    mod.info("Bolt Multiplier v0.3.1-android.1 (native C++), mode=" + s_mode);
+    mod.info("Bolt Multiplier v0.3.1 (native C++), mode=" + s_mode);
 }
 
 } // namespace
 
-OPENRAC_MOD_CPP("bolt-multiplier", "0.3.1-android.1", load)
+OPENRAC_MOD_CPP("bolt-multiplier", "0.3.1", load)
