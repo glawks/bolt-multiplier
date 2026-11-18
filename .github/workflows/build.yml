@@ -1,7 +1,7 @@
 name: build
 on:
   push:
-    branches: [main, master, dev]
+    branches: [main, master, dev, android-dev]
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -22,6 +22,13 @@ jobs:
           - {platform: linux-aarch64, runner: ubuntu-24.04-arm}
           - {platform: macos-arm64, runner: macos-15, arch: arm64}
           - {platform: macos-x86_64, runner: macos-15, arch: x86_64, skip_tests: true}
+          # Cross-compile with the Android NDK. We cannot execute device tests in this runner.
+          - platform: android-arm64
+            runner: ubuntu-24.04
+            configure: >-
+              -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake
+              -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-28
+            skip_tests: true
     defaults:
       run:
         shell: bash
@@ -50,7 +57,7 @@ jobs:
           if [ -n "${{ matrix.arch }}" ]; then
             ARCH="-DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0"
           fi
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release $ARCH
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release $ARCH ${{ matrix.configure }}
       - name: Build
         run: cmake --build build --parallel
       - name: Test
@@ -61,6 +68,8 @@ jobs:
           SDK=$(python tools/fetch_sdk.py)
           python "$SDK/tools/package_mod.py" build/package/bolt_multiplier -o dist
           ls -la dist
+          # Confirm the SDK labelled the output for the intended target.
+          test -s "dist/bolt-multiplier-$(python -c 'import json; print(json.load(open("openrac-mod.json"))["version"])')-${{ matrix.platform }}.zip"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mod-${{ matrix.platform }}
