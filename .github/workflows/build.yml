@@ -21,7 +21,8 @@ jobs:
           - {platform: linux-x86_64, runner: ubuntu-22.04}
           - {platform: linux-aarch64, runner: ubuntu-24.04-arm}
           - {platform: macos-arm64, runner: macos-15, arch: arm64}
-          - {platform: macos-x86_64, runner: macos-15, arch: x86_64, skip_tests: true}
+          # Use the dedicated Intel runner instead of cross-building on Apple Silicon.
+          - {platform: macos-x86_64, runner: macos-15-intel, arch: x86_64, skip_tests: true}
           # Cross-compile with the Android NDK. We cannot execute device tests in this runner.
           - platform: android-arm64
             runner: ubuntu-24.04
